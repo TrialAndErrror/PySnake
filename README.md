@@ -1,3 +1,10 @@
+# Usage
+
+You can run the game by directly opening the HTML file on its own,
+or run python -m flask run to spin up a local server to visit.
+
+Increase the Game Speed to speed up the game, and try to get the highest score you can!
+
 # PyScript Resources
 
 [Original Javascript Tutorial](https://www.educative.io/blog/javascript-snake-game-tutorial)
