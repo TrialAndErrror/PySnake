@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css"/>
+  <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+</head>
+<style>
+  canvas {
+    border-width: 5px;
+    border-color: red;
+  }
+</style>
+<body>
+<canvas id="gameCanvas" width="400" height="400"></canvas>
+
+<py-script>
+  from js import document
+
+  snakeboard = document.getElementById("gameCanvas")
+  snakeboard_ctx = snakeboard.getContext("2d")
+
+  snake = [
+    {'x': 200, 'y': 200},
+    {'x': 190, 'y': 200},
+    {'x': 180, 'y': 200},
+    {'x': 170, 'y': 200},
+    {'x': 160, 'y': 200}
+  ]
+
+
+  def draw_snake_part(snake_part):
+    snakeboard_ctx.fillStyle = 'lightblue'
+    snakeboard_ctx.strokeStyle = 'darkblue'
+    snakeboard_ctx.fillRect(snake_part['x'], snake_part['y'], 10, 10)
+    snakeboard_ctx.strokeRect(snake_part['x'], snake_part['y'], 10, 10)
+
+  def draw_snake():
+    for segment in snake:
+      draw_snake_part(segment)
+
+  draw_snake()
+
+
+</py-script>
+</body>
+</html>
+
+
+<!-- <py-script>
+  snakeboard = Element("gameCanvas")
+  snakeboard_ctx = snakeboard.getContext("2d")
+
+</py-script> -->
