@@ -22,204 +22,70 @@
 <body>
 <h2>The Snake Case</h2>
 <button id="start" type="button">Start Game</button>
+<div id="status"></div>
 <h2 id="score">Score: 0</h2>
 Game Speed: <input id="speed-input" type="number" min="0.5" max="5" step="0.5" value="1" size="4">
 <!-- <button id="start" type="button" pysB-onClick="run_game">Start Game</button> -->
 <canvas id="gameCanvas" width="1200" height="600"></canvas>
 <!--<button id="restart" value="True" title="restart" pys-onClick="restart_game">restart</button>-->
 
+<py-env>
+  - paths:
+    - /src/models.py
+    - /src/constants.py
+  </py-env>
+
 <py-script>
   from js import document
-  import asyncio
   from pyodide import create_proxy
-  import random
-
-
-  def get_direction(event) -> dict:
-    return event
-
-
-  KEY_CODES = {
-    'w': 87,
-    'a': 65,
-    's': 83,
-    'd': 68,
-    'Left Arrow': 37,
-    'Right Arrow': 39,
-    'Up Arrow': 38,
-    'Down Arrow': 40,
-    '8': 56,
-    '4': 52,
-    '5': 53,
-    '6': 54
-  }
-
-  PIXEL_SIZE = 50
-
-  LEFT_KEYS = (KEY_CODES['a'], KEY_CODES['Left Arrow'], KEY_CODES['4'])
-  RIGHT_KEYS = (KEY_CODES['d'], KEY_CODES['Right Arrow'], KEY_CODES['6'])
-  UP_KEYS = (KEY_CODES['w'], KEY_CODES['Up Arrow'], KEY_CODES['8'])
-  DOWN_KEYS = (KEY_CODES['s'], KEY_CODES['Down Arrow'], KEY_CODES['5'])
-
-  DIRECTIONS = {
-    'right': {'x': PIXEL_SIZE, 'y': 0},
-    'left': {'x': -PIXEL_SIZE, 'y': 0},
-    'up': {'x': 0, 'y': -PIXEL_SIZE},
-    'down': {'x': 0, 'y': PIXEL_SIZE},
-  }
-
-  CURRENT_DIRECTION = dict()
-
-  GAME_IS_RUNNING = False
-
-
-  def check_if_hit_head(snake) -> bool:
-    for element in snake[1:]:
-      if element['x'] == snake[0]['x'] and element['y'] == snake[0]['y']:
-        return True
-
-    return False
-
-
-  def check_if_hit_wall(snake) -> bool:
-    hit_left_wall = snake[0]['x'] < 0
-    hit_right_wall = snake[0]['x'] > snakeboard.width - PIXEL_SIZE
-    hit_top_wall = snake[0]['y'] < 0
-    hit_bot_wall = snake[0]['y'] > snakeboard.height - PIXEL_SIZE
-    return any([hit_left_wall, hit_right_wall, hit_top_wall, hit_bot_wall])
-
-
-  def has_game_ended(snake) -> bool:
-    return any([check_if_hit_head(snake), check_if_hit_wall(snake)])
-
+  from models import *
+  from constants import *
 
   snakeboard: Element = document.getElementById("gameCanvas")
   snakeboard_ctx = snakeboard.getContext("2d")
 
+  def set_score(score):
+    score_element = document.getElementById('score')
+    score_element.innerText = f'Score: {score}'
 
-  def draw_snake_part(snake_part: dict):
-    snakeboard_ctx.fillStyle = 'lightblue'
-    snakeboard_ctx.strokeStyle = 'darkblue'
-    snakeboard_ctx.fillRect(snake_part['x'], snake_part['y'], PIXEL_SIZE, PIXEL_SIZE)
-    snakeboard_ctx.strokeRect(snake_part['x'], snake_part['y'], PIXEL_SIZE, PIXEL_SIZE)
-
-
-  def draw_snake(snake):
-    snakeboard_ctx.clearRect(0, 0, snakeboard.width, snakeboard.height)
-    for segment in snake:
-      draw_snake_part(segment)
-
-
-  def clear_square(prev):
-    snakeboard_ctx.clearRect(prev['x'], prev['y'], PIXEL_SIZE, PIXEL_SIZE)
-
-  def random_food(min, max):
-     #return Math.round((Math.random() * (max-min) + min) / 10) * 10;
-    value = round((random.random() * (max-min) + min) / PIXEL_SIZE) * PIXEL_SIZE
-    print(f'Food value: {value}')
-    return value
-
-  def gen_food(snake):
-    food = {
-      'x': random_food(0, snakeboard.width - PIXEL_SIZE),
-      'y': random_food(0, snakeboard.height - PIXEL_SIZE)
-
-    }
-
-    # while food in snake:
-    #   food = gen_food(snake)
-
-    return food
-
-  def draw_food(food):
-    snakeboard_ctx.fillStyle = 'lightgreen'
-    snakeboard_ctx.strokestyle = 'darkgreen'
-    snakeboard_ctx.fillRect(food['x'], food['y'], PIXEL_SIZE, PIXEL_SIZE)
-    snakeboard_ctx.strokeRect(food['x'], food['y'], PIXEL_SIZE, PIXEL_SIZE)
-
-
-  def move_snake(snake: list, head_change: dict, food: dict):
-    head: dict = {'x': snake[0]['x'] + head_change['x'], 'y': snake[0]['y'] + head_change['y']}
-    snake.insert(0, head)
-
-    has_eaten_food: bool = snake[0]['x'] == food['x'] and snake[0]['y'] == food['y']
-    if has_eaten_food:
-      clear_square(food)
-      # Generate new food location
-      food = gen_food(snake)
-      draw_food(food)
-
-    else:
-      # Remove the last part of snake body
-      prev = snake.pop()
-      clear_square(prev)
-
-    return snake, food
-
-
-  async def time_out(speed: float = 1):
-    timeout = await asyncio.sleep(speed)
-    print('one second passed')
-
-
+  game = GameBoard(snakeboard, snakeboard_ctx)
+  
   async def run_game(speed: float = 1):
-    global GAME_IS_RUNNING
+    if not game.is_running:
+        game.start_game() 
+        pyscript.write('status', 'Game running... good luck!')
+    
+        while game.is_running:
+          print(game.snake)
+          game.draw_snake()
+          game.draw_food()
 
-    if not GAME_IS_RUNNING:
-      snake: list = [
-        {'x': PIXEL_SIZE * 10, 'y': PIXEL_SIZE * 4},
-        {'x': PIXEL_SIZE * 9, 'y': PIXEL_SIZE * 4},
-        {'x': PIXEL_SIZE * 8, 'y': PIXEL_SIZE * 4},
-        {'x': PIXEL_SIZE * 7, 'y': PIXEL_SIZE * 4},
-        {'x': PIXEL_SIZE * 6, 'y': PIXEL_SIZE * 4}
-      ]
+          await asyncio.sleep(speed)
 
-      global CURRENT_DIRECTION
-
-      CURRENT_DIRECTION = {'x': PIXEL_SIZE, 'y': 0}
-      food = gen_food(snake)
-
-      GAME_IS_RUNNING = True
-      while True:
-        draw_snake(snake)
-        draw_food(food)
-
-        speed = 1/float(document.getElementById('speed-input').value)
-        await time_out(speed)
-        snake, food = move_snake(snake, CURRENT_DIRECTION, food)
-        set_score(snake)
-        if has_game_ended(snake):
-          GAME_IS_RUNNING = False
-          break
-        print(snake)
-
-      print('Game Over')
-
-
-  def get_direction(event) -> dict:
-    global CURRENT_DIRECTION
-
-    if event.keyCode in LEFT_KEYS and CURRENT_DIRECTION != DIRECTIONS['right']:
-      CURRENT_DIRECTION = DIRECTIONS['left']
-    elif event.keyCode in RIGHT_KEYS and CURRENT_DIRECTION != DIRECTIONS['left']:
-      CURRENT_DIRECTION = DIRECTIONS['right']
-    elif event.keyCode in UP_KEYS and CURRENT_DIRECTION != DIRECTIONS['down']:
-      CURRENT_DIRECTION = DIRECTIONS['up']
-    elif event.keyCode in DOWN_KEYS and CURRENT_DIRECTION != DIRECTIONS['up']:
-      CURRENT_DIRECTION = DIRECTIONS['down']
-
+          game.move_snake()
+          set_score(game.get_score())
+          if game.has_ended():
+              game.is_running = False
+              print('Game Over')
+              pyscript.write('status', f'Game over! Your score was {game.get_score()}')
 
   async def handle_start_game(*args, **kwargs):
     speed = 1/float(document.getElementById('speed-input').value)
     await run_game(speed)
 
+  def get_direction(event) -> dict:
+    if event.keyCode in LEFT_KEYS and game.current_direction != DIRECTIONS['right']:
+      game.next_direction = DIRECTIONS['left']
+    elif event.keyCode in RIGHT_KEYS and game.current_direction != DIRECTIONS['left']:
+      game.next_direction = DIRECTIONS['right']
+    elif event.keyCode in UP_KEYS and game.current_direction != DIRECTIONS['down']:
+      game.next_direction = DIRECTIONS['up']
+    elif event.keyCode in DOWN_KEYS and game.current_direction != DIRECTIONS['up']:
+      game.next_direction = DIRECTIONS['down']
+
   startButton = document.getElementById('start')
   document.addEventListener('keydown', create_proxy(get_direction))
   startButton.addEventListener('click', create_proxy(handle_start_game))
-
-  def set_score(snake):
-	  score_element = document.getElementById('score')
-	  score_element.innerText = f'Score: {len(snake) -5}'
 
 </py-script>
 </body>
