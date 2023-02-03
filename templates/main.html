@@ -20,14 +20,15 @@
   }
 </style>
 <body>
-<h2>The Snake Case</h2>
-<button id="start" type="button">Start Game</button>
-<div id="status"></div>
-<h2 id="score">Score: 0</h2>
-Game Speed: <input id="speed-input" type="number" min="0.5" max="5" step="0.5" value="1" size="4">
-<!-- <button id="start" type="button" pysB-onClick="run_game">Start Game</button> -->
+  <div style="margin: 1rem">
+    <h2>The Snake Case</h2>
+    <button id="start" type="button">Start Game</button>
+    <div id="status"></div>
+    <h2 id="score">Score: 0</h2>
+    Game Speed: <input id="speed-input" type="number" min="0.5" max="5" step="0.5" value="1" size="4">    
+  </div>
+
 <canvas id="gameCanvas" width="1200" height="600"></canvas>
-<!--<button id="restart" value="True" title="restart" pys-onClick="restart_game">restart</button>-->
 
 <py-env>
   - paths:
@@ -52,6 +53,7 @@ Game Speed: <input id="speed-input" type="number" min="0.5" max="5" step="0.5" v
   
   async def run_game(speed: float = 1):
     if not game.is_running:
+        document.getElementById('speed-input').disabled = True
         game.start_game() 
         pyscript.write('status', 'Game running... good luck!')
     
@@ -68,6 +70,7 @@ Game Speed: <input id="speed-input" type="number" min="0.5" max="5" step="0.5" v
               game.is_running = False
               print('Game Over')
               pyscript.write('status', f'Game over! Your score was {game.get_score()}')
+              document.getElementById('speed-input').disabled = False
 
   async def handle_start_game(*args, **kwargs):
     speed = 1/float(document.getElementById('speed-input').value)

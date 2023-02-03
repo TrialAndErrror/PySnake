@@ -54,6 +54,9 @@ class Snake:
         hit_bot_wall = head.y > height / PIXEL_SIZE
         return any([hit_left_wall, hit_right_wall, hit_top_wall, hit_bot_wall])
 
+    def get_overlap(self):
+        return [segment.get_location() for segment in self.segments]
+
     def __str__(self):
         return str([segment.get_location() for segment in self.segments])
 
@@ -70,10 +73,9 @@ class Food(Pixel):
 
         obj = cls()
         obj.x = random_food(0, max_width - PIXEL_SIZE)
-        obj.y  = random_food(0, max_height - PIXEL_SIZE)
+        obj.y = random_food(0, max_height - PIXEL_SIZE)
 
         return obj
-
 
 
 class GameBoard:
@@ -137,7 +139,11 @@ class GameBoard:
 
 
     def _gen_food(self):
-        self.food = Food.make_random(self.board.width, self.board.height)
+        food = Food.make_random(self.board.width, self.board.height)
+        while food in self.snake.get_overlap():
+            food = Food.make_random(self.board.width, self.board.height)
+        self.food = food
+
     
     def _clear_square(self, x, y):
         self.ctx.clearRect(x, y, x + PIXEL_SIZE, y + PIXEL_SIZE)
